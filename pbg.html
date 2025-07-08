@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Powered by Gokhan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      overflow: hidden;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #intro {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      color: orange;
+      z-index: 10;
+      opacity: 0;
+      animation: fadeIn 2s ease forwards;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 2px;
+      text-shadow: 0 0 15px orange;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; background-color: transparent; }
+      100% { opacity: 0; background-color: black; }
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="intro">Powered By Gokhan</div>
+  <canvas id="neuralCanvas" style="display: none;"></canvas>
+
+  <script>
+    const intro = document.getElementById("intro");
+    const canvas = document.getElementById("neuralCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    
+    setTimeout(() => {
+      intro.style.animation = "fadeOut 2s ease forwards";
+      document.body.style.transition = 'background-color 2s ease';
+      document.body.style.backgroundColor = '#000';
+      setTimeout(() => {
+        intro.style.display = "none";
+        canvas.style.display = "block";
+        animate();
+      }, 2000);
+    }, 3000);
+
+    let mouse = {
+      x: canvas.width / 2,
+      y: canvas.height / 2
+    };
+
+    window.addEventListener("mousemove", function(event) {
+      mouse.x = event.x;
+      mouse.y = event.y;
+    });
+
+    window.addEventListener("click", function(event) {
+      nodes.push(new Node(event.x, event.y));
+    });
+
+    const nodes = [];
+    const nodeCount = 150;
+
+    class Node {
+      constructor(x, y) {
+        this.x = x || Math.random() * canvas.width;
+        this.y = y || Math.random() * canvas.height;
+        this.vx = Math.random() * 1.5 - 0.75;
+        this.vy = Math.random() * 1.5 - 0.75;
+      }
+
+      move() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = "orange";
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "orange";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push(new Node());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i].move();
+        nodes[i].draw();
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 250) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = "rgba(255,165,0," + (1 - distance / 250) + ")";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+
+      nodes.forEach(node => {
+        const dx = node.x - mouse.x;
+        const dy = node.y - mouse.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 200) {
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = "rgba(255,165,0," + (1 - distance / 200) + ")";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      });
+
+      nodes.forEach(node => {
+        let cx = canvas.width / 2;
+        let cy = canvas.height / 2;
+        let dx = node.x - cx;
+        let dy = node.y - cy;
+        node.x = cx + dx * Math.cos(0.002) - dy * Math.sin(0.002);
+        node.y = cy + dx * Math.sin(0.002) + dy * Math.cos(0.002);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
